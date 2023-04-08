@@ -4,9 +4,11 @@ import { promisify } from 'util';
 class RedisClient {
   constructor() {
     this.client = createClient();
-    this.client.on('error', (err) => {
-      console.log(`Redis client not connected to the server: ${err}`);
-    });
+    this.client.on('error', (err) => console.log('Redis client not connected to the server: ', err.message));
+  }
+
+  isAlive() {
+    return this.client.connected;
   }
 
   async get(key) {
@@ -20,19 +22,23 @@ class RedisClient {
   }
 
   async set(key, value, duration) {
-    const setValue = promisify(this.client.set).bind(this.client);
+    const setAsync = promisify(this.client.set).bind(this.client);
     try {
-      await setValue(key, value, 'EX', duration);
+      await setAsync(key, value, 'EX', duration);
     } catch (err) {
-      console.log(err);
+      throw new Error(`Failed to set ${key}: ${err.messsage}`);
     }
   }
 
-  isAlive() {
-    return this.client.connected;
+  async del(key) {
+    const delAsync = promisify(this.client.del).bind(this.client);
+    try {
+      await delAsync(key);
+    } catch (err) {
+      console.log(`Failed to delete ${key}: ${err.messsage}`);
+    }
   }
 }
 
 const redisClient = new RedisClient();
-
 export default redisClient;

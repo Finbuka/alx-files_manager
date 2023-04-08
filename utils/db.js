@@ -1,17 +1,23 @@
 import { MongoClient } from 'mongodb';
+// import { MongoClient } from 'mongodb/lib/mongo_client';
 
 class DBClient {
+  // A class with basic connection to a mongodb server
   constructor() {
     const host = process.env.DB_HOST || 'localhost';
-    const port = process.env.DB_PORT || '27017';
-    const dbname = process.env.DB_DATABASE || 'files_manager';
-    this.mongoclient = MongoClient(`mongodb://${host}:${port}/${dbname}`, { useNewUrlParser: true, useUnifiedTopology: true });
-    this.mongoclient.connect();
-    this.db = this.mongoclient.db(dbname);
+    const port = process.env.DB_PORT || 27017;
+    const database = process.env.DB_DATABASE || 'files_manager';
+
+    const uri = `mongodb://${host}:${port}/${database}`;
+    const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    this.client = client;
+    this.client.connect();
+    this.db = client.db(database);
   }
 
+  // checks if the mongoddb is connected
   isAlive() {
-    return this.mongoclient.topology.isConnected();
+    return this.client.topology.isConnected();
   }
 
   async nbUsers() {
